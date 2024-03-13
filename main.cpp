@@ -22,14 +22,17 @@ enum Algorithms {
     CYCLE_SORT
 };
 
+template<typename T>
 class Benchmark {
 public:
-    Benchmark(const std::vector<int> &arr) : arr(arr), copy(arr) {
+    explicit Benchmark(const std::vector<T> &arr) : arr(arr), copy(arr)
+    {
         rng = std::mt19937(dev());
     }
     void print_array() const {
         std::cout<<"Array is: ";
-        for(const int &num : arr) {
+        for (const T &num: arr)
+        {
             std::cout<<num<<" ";
         }
         std::cout<<"\n";
@@ -43,7 +46,8 @@ public:
 
     void time(Algorithms alg) {
         std::cout<<"Sorting array with "<<arr.size()<<" elements.\n";
-        if(arr.size() <= 100) print_array();
+        if (arr.size() <= 100)
+            print_array(); // poate folosim std::vector<typename>::operator<<(2), cred ca ar fi mai clean
         auto time_start = std::chrono::high_resolution_clock::now();
         switch(alg) {
             // Pasul 2: Adauga un case exact asa cum am adaugat eu mai jos. Pasul 3 se va gasi in main.
@@ -70,7 +74,7 @@ public:
             print_array();
         }
         bool is_sorted = true;
-        for (int i = 1; i < arr.size(); ++i)
+        for (size_t i = 1; i < arr.size(); ++i)
         {
             if (arr.at(i) < arr.at(i - 1)) is_sorted = false;
         }
@@ -90,19 +94,21 @@ private:
      * nevoie. Dupe ce termini de implementat, vezi functia "time" din sectiunea public.
      */
 
-    std::vector<int> merge(std::vector<int> v1, std::vector<int> v2) {
-        std::vector<int> res_vec;
-        int i = 0, j = 0;
+    std::vector<T> merge(std::vector<T> v1, std::vector<T> v2)
+    {
+        std::vector<T> res_vec;
+        size_t i = 0, j = 0;
         while(i < v1.size() && j < v2.size()) {
-            if(v1[i] <= v2[j]) {
-                res_vec.push_back(v1[i++]);
+            if (v1.at(i) <= v2.at(j))
+            {
+                res_vec.push_back(v1.at(i++));
             }
             else {
-                res_vec.push_back(v2[j++]);
+                res_vec.push_back(v2.at(j++));
             }
         }
-        while(i < v1.size()) res_vec.push_back(v1[i++]);
-        while(j < v2.size()) res_vec.push_back(v2[j++]);
+        while (i < v1.size()) res_vec.push_back(v1.at(i++));
+        while (j < v2.size()) res_vec.push_back(v2.at(j++));
         return res_vec;
     }
 
@@ -110,36 +116,40 @@ private:
         if(start >= end) return;
         std::uniform_int_distribution<std::mt19937::result_type> dist(start,end);
         size_t pivot = dist(rng);
-        std::swap(arr[pivot], arr[end]);
+        std::swap(arr.at(pivot), arr.at(end));
         size_t i = start, j = start;
         while(j < end) {
-            if(arr[j] <= arr[end]) {
-                std::swap(arr[j], arr[i++]);
+            if (arr.at(j) <= arr.at(end))
+            {
+                std::swap(arr.at(j), arr.at(i++));
             }
             j++;
         }
-        std::swap(arr[end], arr[i]);
+        std::swap(arr.at(end), arr.at(i));
         if(i > 0) quicksort(start, i - 1);
         quicksort(i + 1, end);
     }
 
     void selection_sort() {
-        for(int i = 0; i < arr.size() - 1; i++) {
-            int *min = &arr[i];
-            for(int j = i + 1; j < arr.size(); j++) {
-                if(*min > arr[j]) min = &arr[j];
+        for (size_t i = 0; i < arr.size() - 1; i++)
+        {
+            T *min = &arr.at(i);
+            for (size_t j = i + 1; j < arr.size(); j++)
+            {
+                if (*min > arr.at(j)) min = &arr.at(j);
             }
-            std::swap(*min, arr[i]);
+            std::swap(*min, arr.at(i));
         }
     }
 
-    std::vector<int> mergesort(size_t start, size_t end) {
+    std::vector<T> mergesort(size_t start, size_t end)
+    {
         if(start == end) {
-            return {arr[start]};
+            return {arr.at(start)};
         }
         size_t mid = (start + end) / 2;
-        std::vector<int> v1 = mergesort(start, mid);
-        std::vector<int> v2 = mergesort(mid + 1, end);
+        std::vector<T> v1 = mergesort(start, mid);
+        std::vector<T> v2 = mergesort(mid + 1, end);
         return merge(v1, v2);
     }
 
@@ -175,6 +185,7 @@ int main() {
 
     std::vector<int> arr;
     unsigned int arr_size = arr_size_dist(rng);
+    arr.reserve(arr_size);
     for(int i = 0; i < arr_size; i++) {
         arr.push_back(static_cast<int>(arr_num_dist(rng)));
     }
