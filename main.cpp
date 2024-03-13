@@ -153,9 +153,9 @@ int main() {
 
     // Pasul 3: cheama functia pasand enumul potrivit.
 
-    Benchmark bm({3529, 9254, 1929, 7248, 1862, 9812, 7735, 317, 4123, 9645, 4932, 9414, 2201, 7341, 4363, 998, 5325, 4952, 9619});
-    //bm.time(MERGESORT);
-    //bm.time(SELECTION_SORT);
+    Benchmark bm(arr);
+    bm.time(MERGESORT);
+    bm.time(SELECTION_SORT);
     bm.time(QUICKSORT);
     return 0;
 }
