@@ -18,7 +18,8 @@
 enum Algorithms {
     SELECTION_SORT,
     QUICKSORT,
-    MERGESORT
+    MERGESORT,
+    CYCLE_SORT
 };
 
 class Benchmark {
@@ -57,6 +58,10 @@ public:
             case MERGESORT:
                 std::cout<<"Using mergesort algorithm.\n";
                 arr = mergesort(0, arr.size() - 1);
+                break;
+            case CYCLE_SORT:
+                std::cout << "Using cycle sort algorithm.\n";
+                cycle_sort();
                 break;
         }
         auto time_stop = std::chrono::high_resolution_clock::now();
@@ -129,6 +134,29 @@ private:
         std::vector<int> v1 = mergesort(start, mid);
         std::vector<int> v2 = mergesort(mid + 1, end);
         return merge(v1, v2);
+    }
+
+    void cycle_sort()
+    {
+        size_t max_cycle_start = arr.size() - 2, max_arr_index = arr.size() - 1;
+        for (size_t cycle_start = 0; cycle_start < max_cycle_start; ++cycle_start)
+        {
+            int pivot = arr.at(cycle_start);
+            size_t position;
+            do
+            {
+                position = cycle_start;
+                for (size_t i = 0; i < max_arr_index; ++i)
+                {
+                    if (arr.at(i) < pivot) position++;
+                }
+                if (position != cycle_start)
+                {
+                    while (arr.at(position) == pivot) position++;
+                }
+                std::swap(arr.at(position), pivot);
+            } while (position != cycle_start);
+        }
     }
 };
 
