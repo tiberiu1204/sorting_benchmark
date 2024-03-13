@@ -19,10 +19,11 @@
 Hey Pizderiu, pentru ca ti-a fost lene sa scrii cod safe si sa ne faci viata usoara cand Doomitran ne va cere sa testam
 sortarile pe float, am facut eu cateva modificari si am scos warningurile. Vezi ca iti trebuie CXX >= 17, ca altfel trebuie
 sa specifici la compile time tipul template-ului. Noapte buna, revin si cu alte imbunatatiri.
-        P.S. : vezi ca mai sunt 3 warninguri, 2 de recursivitate, si unu ca e Clang-Tidy prost si nu vede ca defapt RNG-ul e seed-uit mereu cu altceva.
+        P.S. : vezi ca mai sunt 2 warninguri, 2 de recursivitate.
 */
 
-enum Algorithms {
+enum Algorithms
+{
     SELECTION_SORT,
     QUICKSORT,
     MERGESORT,
@@ -30,14 +31,15 @@ enum Algorithms {
 };
 
 template<typename T>
-class Benchmark {
+class Benchmark
+{
 public:
-    explicit Benchmark(const std::vector<T> &arr) : arr(arr), copy(arr)
+    explicit Benchmark(const std::vector<T> &arr) : arr(arr), copy(arr), rng(dev())
+    {}
+
+    void print_array() const
     {
-        rng = std::mt19937(dev());
-    }
-    void print_array() const {
-        std::cout<<"Array is: ";
+        std::cout << "Array is: ";
         for (const T &num: arr)
         {
             std::cout<<num<<" ";
