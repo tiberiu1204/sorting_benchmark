@@ -69,7 +69,14 @@ public:
         if(arr.size() <= 100) {
             print_array();
         }
-        std::cout<<"Completed in: "<<std::fixed<<std::setprecision(6)<<0.000001 * static_cast<double>(duration.count())<<" seconds.\n\n";
+        bool is_sorted = true;
+        for (int i = 1; i < arr.size(); ++i)
+        {
+            if (arr.at(i) < arr.at(i - 1)) is_sorted = false;
+        }
+        std::cout << "Completed in: " << std::fixed << std::setprecision(6)
+                  << 0.000001 * static_cast<double>(duration.count()) << " seconds.\n";
+        std::cout << (is_sorted ? "Array is sorted correctly." : "Array is not sorted correctly.") << "\n\n";
         arr = copy;
     }
 private:
@@ -139,14 +146,14 @@ private:
     void cycle_sort()
     {
         size_t max_cycle_start = arr.size() - 2, max_arr_index = arr.size() - 1;
-        for (size_t cycle_start = 0; cycle_start < max_cycle_start; ++cycle_start)
+        for (size_t cycle_start = 0; cycle_start <= max_cycle_start; ++cycle_start)
         {
             int pivot = arr.at(cycle_start);
             size_t position;
             do
             {
                 position = cycle_start;
-                for (size_t i = 0; i < max_arr_index; ++i)
+                for (size_t i = cycle_start + 1; i <= max_arr_index; ++i)
                 {
                     if (arr.at(i) < pivot) position++;
                 }
@@ -174,9 +181,10 @@ int main() {
 
     // Pasul 3: cheama functia pasand enumul potrivit.
 
-    Benchmark bm({3529, 9254, 1929, 7248, 1862, 9812, 7735, 317, 4123, 9645, 4932, 9414, 2201, 7341, 4363, 998, 5325, 4952, 9619});
-    //bm.time(MERGESORT);
-    //bm.time(SELECTION_SORT);
+    Benchmark bm(arr);
+    bm.time(MERGESORT);
+    bm.time(SELECTION_SORT);
     bm.time(QUICKSORT);
+    bm.time(CYCLE_SORT);
     return 0;
 }
