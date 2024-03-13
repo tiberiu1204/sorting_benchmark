@@ -4,7 +4,7 @@
 #include <random>
 #include <algorithm>
 #include <iomanip>
-#define MAX_ARRAY_SIZE 100000
+#define MAX_ARRAY_SIZE 20
 #define MAX_ARRAY_ELEMENT_VALUE 10000
 
 /*
@@ -100,15 +100,14 @@ private:
         size_t pivot = dist(rng);
         std::swap(arr[pivot], arr[end]);
         size_t i = start, j = start;
-        while(j < end && i < end) {
+        while(j < end) {
             if(arr[j] <= arr[end]) {
                 std::swap(arr[j], arr[i++]);
             }
             j++;
         }
         std::swap(arr[end], arr[i]);
-        if(i == 0) i++;
-        quicksort(start, i - 1);
+        if(i > 0) quicksort(start, i - 1);
         quicksort(i + 1, end);
     }
 
@@ -136,7 +135,7 @@ private:
 int main() {
     std::random_device dev;
     auto rng = std::mt19937(dev());
-    std::uniform_int_distribution<std::mt19937::result_type> arr_size_dist(0, MAX_ARRAY_SIZE);
+    std::uniform_int_distribution<std::mt19937::result_type> arr_size_dist(10, MAX_ARRAY_SIZE);
     std::uniform_int_distribution<std::mt19937::result_type> arr_num_dist(0, MAX_ARRAY_ELEMENT_VALUE);
 
     std::vector<int> arr;
@@ -147,9 +146,9 @@ int main() {
 
     // Pasul 3: cheama functia pasand enumul potrivit.
 
-    Benchmark bm(arr);
-    bm.time(MERGESORT);
-    bm.time(SELECTION_SORT);
+    Benchmark bm({3529, 9254, 1929, 7248, 1862, 9812, 7735, 317, 4123, 9645, 4932, 9414, 2201, 7341, 4363, 998, 5325, 4952, 9619});
+    //bm.time(MERGESORT);
+    //bm.time(SELECTION_SORT);
     bm.time(QUICKSORT);
     return 0;
 }
