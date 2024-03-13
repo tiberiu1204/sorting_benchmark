@@ -64,7 +64,14 @@ public:
         if(arr.size() <= 100) {
             print_array();
         }
-        std::cout<<"Completed in: "<<std::fixed<<std::setprecision(6)<<0.000001 * static_cast<double>(duration.count())<<" seconds.\n\n";
+        bool is_sorted = true;
+        for (int i = 1; i < arr.size(); ++i)
+        {
+            if (arr.at(i) < arr.at(i - 1)) is_sorted = false;
+        }
+        std::cout << "Completed in: " << std::fixed << std::setprecision(6)
+                  << 0.000001 * static_cast<double>(duration.count()) << " seconds.\n";
+        std::cout << (is_sorted ? "Array is sorted correctly." : "Array is not sorted correctly.") << "\n\n";
         arr = copy;
     }
 private:
