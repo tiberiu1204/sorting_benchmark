@@ -15,6 +15,13 @@
  * de la linia 77.
  */
 
+/*
+Hey Pizderiu, pentru ca ti-a fost lene sa scrii cod safe si sa ne faci viata usoara cand Doomitran ne va cere sa testam
+sortarile pe float, am facut eu cateva modificari si am scos warningurile. Vezi ca iti trebuie CXX >= 17, ca altfel trebuie
+sa specifici la compile time tipul template-ului. Noapte buna, revin si cu alte imbunatatiri.
+        P.S. : vezi ca mai sunt 3 warninguri, 2 de recursivitate, si unu ca e Clang-Tidy prost si nu vede ca defapt RNG-ul e seed-uit mereu cu altceva.
+*/
+
 enum Algorithms {
     SELECTION_SORT,
     QUICKSORT,
