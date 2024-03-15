@@ -4,7 +4,7 @@
 #include <random>
 #include <algorithm>
 #include <iomanip>
-#define MAX_ARRAY_SIZE 20
+#define MAX_ARRAY_SIZE 100000
 #define MAX_ARRAY_ELEMENT_VALUE 10000
 
 /*
@@ -25,9 +25,19 @@ sa specifici la compile time tipul template-ului. Noapte buna, revin si cu alte 
 enum Algorithms
 {
     SELECTION_SORT,
-    QUICKSORT,
+    QS_RANDOM,
+    QS_FIRST,
+    QS_LAST,
+    QS_MEDIAN,
     MERGESORT,
     CYCLE_SORT
+};
+
+enum QuicksortType {
+    MEDIAN,
+    RANDOM,
+    FIRST,
+    LAST
 };
 
 template<typename T>
@@ -60,9 +70,21 @@ public:
         auto time_start = std::chrono::high_resolution_clock::now();
         switch(alg) {
             // Pasul 2: Adauga un case exact asa cum am adaugat eu mai jos. Pasul 3 se va gasi in main.
-            case QUICKSORT:
-                std::cout<<"Using quicksort algorithm.\n";
-                quicksort(0, arr.size() - 1);
+            case QS_RANDOM:
+                std::cout<<"Using quicksort algorithm with random pivot selection.\n";
+                quicksort(0, arr.size() - 1, RANDOM);
+                break;
+            case QS_MEDIAN:
+                std::cout<<"Using quicksort algorithm with median pivot selection.\n";
+                quicksort(0, arr.size() - 1, MEDIAN);
+                break;
+            case QS_LAST:
+                std::cout<<"Using quicksort algorithm with last pivot selection.\n";
+                quicksort(0, arr.size() - 1, LAST);
+                break;
+            case QS_FIRST:
+                std::cout<<"Using quicksort algorithm with first pivot selection.\n";
+                quicksort(0, arr.size() - 1, FIRST);
                 break;
             case SELECTION_SORT:
                 std::cout<<"Using selection sort algorithm.\n";
@@ -121,10 +143,24 @@ private:
         return res_vec;
     }
 
-    void quicksort(size_t start, size_t end) {
+    void quicksort(size_t start, size_t end, QuicksortType t) {
         if(start >= end) return;
         std::uniform_int_distribution<std::mt19937::result_type> dist(start,end);
-        size_t pivot = dist(rng);
+        size_t pivot;
+        switch(t) {
+            case RANDOM:
+                pivot = dist(rng);
+                break;
+            case MEDIAN:
+                pivot = (start + end) / 2;
+                break;
+            case LAST:
+                pivot = end;
+                break;
+            case FIRST:
+                pivot = start;
+                break;
+        }
         std::swap(arr.at(pivot), arr.at(end));
         size_t i = start, j = start;
         while(j < end) {
@@ -135,8 +171,8 @@ private:
             j++;
         }
         std::swap(arr.at(end), arr.at(i));
-        if(i > 0) quicksort(start, i - 1);
-        quicksort(i + 1, end);
+        if(i > 0) quicksort(start, i - 1, t);
+        quicksort(i + 1, end, t);
     }
 
     void selection_sort() {
@@ -204,7 +240,10 @@ int main() {
     Benchmark bm(arr);
     bm.time(MERGESORT);
     bm.time(SELECTION_SORT);
-    bm.time(QUICKSORT);
+    bm.time(QS_RANDOM);
+    bm.time(QS_MEDIAN);
+    bm.time(QS_LAST);
+    bm.time(QS_FIRST);
     bm.time(CYCLE_SORT);
     return 0;
 }
