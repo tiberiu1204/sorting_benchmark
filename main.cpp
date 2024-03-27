@@ -115,8 +115,8 @@ public:
         arr = copy;
     }
 private:
-    std::vector<int> arr;
-    std::vector<int> copy;
+    std::vector<T> arr;
+    std::vector<T> copy;
     std::random_device dev;
     std::mt19937 rng;
 
