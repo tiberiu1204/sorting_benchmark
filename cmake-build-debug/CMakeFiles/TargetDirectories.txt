@@ -1,3 +1,0 @@
-D:/Workspace/Facultate/SD/sorting_benchmark/cmake-build-debug/CMakeFiles/sorting_benchmark.dir
-D:/Workspace/Facultate/SD/sorting_benchmark/cmake-build-debug/CMakeFiles/edit_cache.dir
-D:/Workspace/Facultate/SD/sorting_benchmark/cmake-build-debug/CMakeFiles/rebuild_cache.dir
