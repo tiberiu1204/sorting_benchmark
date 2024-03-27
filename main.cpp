@@ -4,8 +4,9 @@
 #include <random>
 #include <algorithm>
 #include <iomanip>
-#define MAX_ARRAY_SIZE 100000
-#define MAX_ARRAY_ELEMENT_VALUE 10000
+#include <bit>
+#define MAX_ARRAY_SIZE 1000000
+#define MAX_ARRAY_ELEMENT_VALUE 1000000000
 
 /*
  * Hey Bludutz, pentru ca stiu ca esti mai prost, am adaugat instructiuni detaliate despre cum sa adaugi algoritmi
@@ -30,7 +31,11 @@ enum Algorithms
     QS_LAST,
     QS_MEDIAN,
     MERGESORT,
-    CYCLE_SORT
+    CYCLE_SORT,
+    SHELLSORT,
+    RADIX_SORT_10,
+    RADIX_SORT_BYTE,
+    RADIX_SORT_2_16
 };
 
 enum QuicksortType {
@@ -97,6 +102,22 @@ public:
             case CYCLE_SORT:
                 std::cout << "Using cycle sort algorithm.\n";
                 cycle_sort();
+                break;
+            case SHELLSORT:
+                std::cout << "Using shellsort algorithm.\n";
+                shellsort();
+                break;
+            case RADIX_SORT_10:
+                std::cout << "Using radix sort with base 10 algorithm.\n";
+                radix_sort(10);
+                break;
+            case RADIX_SORT_BYTE:
+                std::cout << "Using radix sort by bytes algorithm.\n";
+                radix_sort();
+                break;
+            case RADIX_SORT_2_16:
+                std::cout << "Using radix sort with base 2^16 algorithm.\n";
+                radix_sort(0x00010000);
                 break;
         }
         auto time_stop = std::chrono::high_resolution_clock::now();
@@ -220,6 +241,93 @@ private:
             } while (position != cycle_start);
         }
     }
+
+    void shellsort()
+    {
+        size_t gaps[8] = {701, 301, 132, 57, 23, 10, 4, 1}; // Marcin Ciura experimental gapping
+        for (const auto& gap : gaps)
+        {
+            for (size_t i = gap; i < arr.size(); ++i) {
+                T temp = arr.at(i);
+                size_t j;
+                for (j = i; (j >= gap) && (arr.at(j - gap) > temp); j -= gap)
+                {
+                    arr.at(j) = arr.at(j - gap);
+                }
+                arr.at(j) = temp;
+            }
+        }
+    }
+
+    // NOTE: THIS SH*T IS IMPLEMENTATION DEFINED! SO IF THE NERDS THAT WRITE COMPILERS DECIDE THAT FLOATS SHOULD BE 3 BYTES AND INTS 53 BYTES, IT WILL FAIL WITH A SOMMERSAULT!
+    void radix_sort(unsigned radix = 256) //by default perform byte by byte sorting
+    {
+        // preprocessing step so the type of the data does not matter: flip all sign bits
+        // also get the max element as unsigned for later
+        for(auto& element : arr){
+            element ^= 0x80000000;
+        }
+        unsigned max_element = 0;
+        for (const auto &element : arr){
+            max_element = std::max(std::bit_cast<unsigned>(element), max_element);
+        }
+        // NOTE: THIS SH*T IS IMPLEMENTATION DEFINED! SO IF THE NERDS THAT WRITE COMPILERS DECIDE THAT FLOATS SHOULD BE 3 BYTES AND INTS 53 BYTES, IT WILL FAIL WITH A SOMERSAULT!
+        auto unsigned_max_element = std::bit_cast<unsigned>(max_element);
+        std::vector<std::vector<T>> buckets(radix);
+
+        if(radix == 256)
+        {
+            for (unsigned byte_index = 0; byte_index < 4; ++byte_index)
+            {
+                for (const auto &element : arr)
+                {
+                    buckets[(std::bit_cast<unsigned>(element)>>(byte_index*8))&0xff].emplace_back(element);
+                }
+                arr.clear();
+                auto dest = std::back_inserter(arr);
+                for (auto &bucket : buckets) {
+                    arr.insert(std::end(arr), std::begin(bucket), std::end(bucket));
+                    bucket.clear();
+                }
+            }
+        } else if (radix == 0x00010000)
+        {
+            for (unsigned byte_pair_index = 0; byte_pair_index < 2; ++byte_pair_index)
+            {
+                for (const auto &element : arr)
+                {
+                    buckets[(std::bit_cast<unsigned>(element)>>(byte_pair_index*16))&0xffff].emplace_back(element);
+                }
+                arr.clear();
+                auto dest = std::back_inserter(arr);
+                for (auto &bucket : buckets) {
+                    arr.insert(std::end(arr), std::begin(bucket), std::end(bucket));
+                    bucket.clear();
+                }
+            }
+        } else
+        {
+            for (unsigned long long order = 1; unsigned_max_element / order > 0; order *= radix)
+            {
+                for (const auto &element : arr)
+                {
+                    buckets[(std::bit_cast<unsigned>(element) / order) % radix].emplace_back(element);
+                }
+                arr.clear();
+                auto dest = std::back_inserter(arr);
+                for (auto &bucket : buckets)
+                {
+                    arr.insert(std::end(arr), std::begin(bucket), std::end(bucket));
+                    bucket.clear();
+                }
+            }
+        }
+
+        // repair array
+        for(auto& element : arr){
+            element ^= 0x80000000;
+        }
+    }
 };
 
 int main() {
@@ -239,11 +347,16 @@ int main() {
 
     Benchmark bm(arr);
     bm.time(MERGESORT);
-    bm.time(SELECTION_SORT);
+    bm.time(SELECTION_SORT); // 100k elements ~ 30s => at over 200k elements abort sort (TLE, >60s runtime)
     bm.time(QS_RANDOM);
     bm.time(QS_MEDIAN);
     bm.time(QS_LAST);
     bm.time(QS_FIRST);
-    bm.time(CYCLE_SORT);
+    bm.time(CYCLE_SORT); // 100k elements ~ 76s => at over 80(-ish)k elements abort sort (TLE, >60s runtime)
+    bm.time(SHELLSORT);
+    bm.time(RADIX_SORT_10); // this one seems to be the slowest among radix sorts
+    bm.time(RADIX_SORT_BYTE); // this one (read in Vladut voice) "Trage da rupe scaunu"
+    bm.time(RADIX_SORT_2_16); // interestingly good, ties with byte one (???) when elements <= 10000, loses afterwards
+
     return 0;
 }
