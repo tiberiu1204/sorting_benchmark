@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <iomanip>
 #include <bit>
+#include <queue>
+#include <cstring>
 #define MAX_ARRAY_SIZE 1000000
 #define MIN_ARRAY_SIZE 10
 #define MAX_ARRAY_ELEMENT_VALUE 1000000000
@@ -36,7 +38,9 @@ enum Algorithms
     SHELLSORT,
     RADIX_SORT_10,
     RADIX_SORT_BYTE,
-    RADIX_SORT_2_16
+    RADIX_SORT_2_16,
+    HEAP_SORT,
+    STL_SORT
 };
 
 enum QuicksortType {
@@ -119,6 +123,14 @@ public:
             case RADIX_SORT_2_16:
                 std::cout << "Using radix sort with base 2^16 algorithm.\n";
                 radix_sort(0x00010000);
+                break;
+            case HEAP_SORT:
+                std::cout << "Using heap sort algorithm.\n";
+                heap_sort();
+                break;
+            case STL_SORT:
+                std::cout << "Using STL sort algorithm.\n";
+                stl_sort();
                 break;
         }
         auto time_stop = std::chrono::high_resolution_clock::now();
@@ -260,7 +272,7 @@ private:
     {
         // preprocessing step so the type of the data does not matter: flip all sign bits
         // also get the max element as unsigned for later
-        if(typeid(arr[0]) != unsigned)
+        if(!std::strcmp(typeid(arr[0]).name(), "unsigned"))
         {
             for(auto& element : arr){
                 element ^= 0x80000000;
@@ -322,12 +334,32 @@ private:
         }
 
         // repair array
-        if(typeid(arr[0]) != unsigned)
+        if(!std::strcmp(typeid(arr[0]).name(), "unsigned"))
         {
             for(auto& element : arr){
                 element ^= 0x80000000;
             }
         }
+    }
+
+    void heap_sort()
+    {
+        std::priority_queue<T> heap;
+        for (const auto &element : arr)
+        {
+            heap.push(element);
+        }
+        arr.clear();
+        while(!heap.empty())
+        {
+            arr.emplace_back(heap.top());
+            heap.pop();
+        }
+    }
+
+    void stl_sort()
+    {
+        std::sort(arr.begin(), arr.end());
     }
 };
 
@@ -358,6 +390,8 @@ int main() {
     bm.time(RADIX_SORT_10); // this one seems to be the slowest among radix sorts
     bm.time(RADIX_SORT_BYTE); // this one (read in Vladut voice) "Trage da rupe scaunu"
     bm.time(RADIX_SORT_2_16); // interestingly good, ties with byte one (???) when elements <= 10000, loses afterward
+    bm.time(HEAP_SORT);
+    bm.time(STL_SORT);
 
     return 0;
 }
