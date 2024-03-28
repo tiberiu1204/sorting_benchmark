@@ -260,8 +260,11 @@ private:
     {
         // preprocessing step so the type of the data does not matter: flip all sign bits
         // also get the max element as unsigned for later
-        for(auto& element : arr){
-            element ^= 0x80000000;
+        if(typeid(arr[0]) != unsigned)
+        {
+            for(auto& element : arr){
+                element ^= 0x80000000;
+            }
         }
         unsigned max_element = 0;
         for (const auto &element : arr){
@@ -320,8 +323,11 @@ private:
         }
 
         // repair array
-        for(auto& element : arr){
-            element ^= 0x80000000;
+        if(typeid(arr[0]) != unsigned)
+        {
+            for(auto& element : arr){
+                element ^= 0x80000000;
+            }
         }
     }
 };
