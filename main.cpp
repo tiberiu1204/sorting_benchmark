@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <bit>
 #define MAX_ARRAY_SIZE 1000000
+#define MIN_ARRAY_SIZE 10
 #define MAX_ARRAY_ELEMENT_VALUE 1000000000
 
 /*
@@ -328,7 +329,7 @@ private:
 int main() {
     std::random_device dev;
     auto rng = std::mt19937(dev());
-    std::uniform_int_distribution<std::mt19937::result_type> arr_size_dist(10, MAX_ARRAY_SIZE);
+    std::uniform_int_distribution<std::mt19937::result_type> arr_size_dist(MIN_ARRAY_SIZE, MAX_ARRAY_SIZE);
     std::uniform_int_distribution<std::mt19937::result_type> arr_num_dist(0, MAX_ARRAY_ELEMENT_VALUE);
 
     std::vector<int> arr;
@@ -351,7 +352,7 @@ int main() {
     bm.time(SHELLSORT);
     bm.time(RADIX_SORT_10); // this one seems to be the slowest among radix sorts
     bm.time(RADIX_SORT_BYTE); // this one (read in Vladut voice) "Trage da rupe scaunu"
-    bm.time(RADIX_SORT_2_16); // interestingly good, ties with byte one (???) when elements <= 10000, loses afterwards
+    bm.time(RADIX_SORT_2_16); // interestingly good, ties with byte one (???) when elements <= 10000, loses afterward
 
     return 0;
 }
