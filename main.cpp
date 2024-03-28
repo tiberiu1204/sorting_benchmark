@@ -7,7 +7,7 @@
 #include <bit>
 #include <queue>
 #include <cstring>
-#define MAX_ARRAY_SIZE 1000000
+#define MAX_ARRAY_SIZE 100
 #define MIN_ARRAY_SIZE 10
 #define MAX_ARRAY_ELEMENT_VALUE 1000000000
 
@@ -272,7 +272,7 @@ private:
     {
         // preprocessing step so the type of the data does not matter: flip all sign bits
         // also get the max element as unsigned for later
-        if(!std::strcmp(typeid(arr[0]).name(), "unsigned"))
+        if(!std::is_unsigned<T>::value)
         {
             for(auto& element : arr){
                 element ^= 0x80000000;
@@ -334,7 +334,7 @@ private:
         }
 
         // repair array
-        if(!std::strcmp(typeid(arr[0]).name(), "unsigned"))
+        if(!std::is_unsigned<T>::value)
         {
             for(auto& element : arr){
                 element ^= 0x80000000;
@@ -355,6 +355,7 @@ private:
             arr.emplace_back(heap.top());
             heap.pop();
         }
+        std::reverse(arr.begin(), arr.end());
     }
 
     void stl_sort()
@@ -380,12 +381,12 @@ int main() {
 
     Benchmark bm(arr);
     bm.time(MERGESORT);
-    bm.time(SELECTION_SORT); // 100k elements ~ 30s => at over 200k elements abort sort (TLE, >60s runtime)
+    //bm.time(SELECTION_SORT); // 100k elements ~ 30s => at over 200k elements abort sort (TLE, >60s runtime)
     bm.time(QS_RANDOM);
     bm.time(QS_MEDIAN);
     bm.time(QS_LAST);
     bm.time(QS_FIRST);
-    bm.time(CYCLE_SORT); // 100k elements ~ 76s => at over 80(-ish)k elements abort sort (TLE, >60s runtime)
+    //bm.time(CYCLE_SORT); // 100k elements ~ 76s => at over 80(-ish)k elements abort sort (TLE, >60s runtime)
     bm.time(SHELLSORT);
     bm.time(RADIX_SORT_10); // this one seems to be the slowest among radix sorts
     bm.time(RADIX_SORT_BYTE); // this one (read in Vladut voice) "Trage da rupe scaunu"
