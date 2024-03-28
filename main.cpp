@@ -6,8 +6,8 @@
 #include <iomanip>
 #include <bit>
 #include <queue>
-#include <cstring>
-#define MAX_ARRAY_SIZE 100
+
+#define MAX_ARRAY_SIZE 1000000000
 #define MIN_ARRAY_SIZE 10
 #define MAX_ARRAY_ELEMENT_VALUE 1000000000
 
