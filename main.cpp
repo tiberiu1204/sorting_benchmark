@@ -231,7 +231,7 @@ private:
         size_t max_cycle_start = arr.size() - 2, max_arr_index = arr.size() - 1;
         for (size_t cycle_start = 0; cycle_start <= max_cycle_start; ++cycle_start)
         {
-            int pivot = arr.at(cycle_start);
+            T pivot = arr.at(cycle_start);
             size_t position;
             do
             {
@@ -274,7 +274,7 @@ private:
         if(!std::is_unsigned<T>::value)
         {
             for(auto& element : arr){
-                element ^= 0x80000000;
+                reinterpret_cast<unsigned &>(element) ^= 0x80000000;
             }
         }
         unsigned max_element = 0;
@@ -336,7 +336,7 @@ private:
         if(!std::is_unsigned<T>::value)
         {
             for(auto& element : arr){
-                element ^= 0x80000000;
+                reinterpret_cast<unsigned &>(element) ^= 0x80000000;;
             }
         }
     }
