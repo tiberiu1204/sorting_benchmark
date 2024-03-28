@@ -7,8 +7,8 @@
 #include <bit>
 #include <queue>
 
-#define MAX_ARRAY_SIZE 1000000000
-#define MIN_ARRAY_SIZE 10
+#define MAX_ARRAY_SIZE 100000001
+#define MIN_ARRAY_SIZE 100000001
 #define MAX_ARRAY_ELEMENT_VALUE 1000000000
 
 
@@ -55,6 +55,7 @@ public:
 
 
     void time(Algorithms alg) {
+        bool stopped = false;
         std::cout<<"Sorting array with "<<arr.size()<<" elements.\n";
         if (arr.size() <= 100)
             print_array(); // poate folosim std::vector<typename>::operator<<(2), cred ca ar fi mai clean
@@ -63,35 +64,51 @@ public:
             // Pasul 2: Adauga un case exact asa cum am adaugat eu mai jos. Pasul 3 se va gasi in main.
             case QS_RANDOM:
                 std::cout<<"Using quicksort algorithm with random pivot selection.\n";
-                quicksort(0, arr.size() - 1, RANDOM);
+                if (arr.size() <= 100000000) {
+                    quicksort(0, arr.size() - 1, RANDOM);
+                } else stopped = true;
                 break;
             case QS_MEDIAN:
                 std::cout<<"Using quicksort algorithm with median pivot selection.\n";
-                quicksort(0, arr.size() - 1, MEDIAN);
+                if (arr.size() <= 100000000) {
+                    quicksort(0, arr.size() - 1, MEDIAN);
+                } else stopped = true;
                 break;
             case QS_LAST:
                 std::cout<<"Using quicksort algorithm with last pivot selection.\n";
-                quicksort(0, arr.size() - 1, LAST);
+                if (arr.size() <= 100000000) {
+                    quicksort(0, arr.size() - 1, LAST);
+                } else stopped = true;
                 break;
             case QS_FIRST:
                 std::cout<<"Using quicksort algorithm with first pivot selection.\n";
-                quicksort(0, arr.size() - 1, FIRST);
+                if (arr.size() <= 100000000) {
+                    quicksort(0, arr.size() - 1, FIRST);
+                } else stopped = true;
                 break;
             case SELECTION_SORT:
                 std::cout<<"Using selection sort algorithm.\n";
-                selection_sort();
+                if (arr.size() <= 200000) {
+                    selection_sort();
+                } else stopped = true;
                 break;
             case MERGESORT:
                 std::cout<<"Using mergesort algorithm.\n";
-                arr = mergesort(0, arr.size() - 1);
+                if (arr.size() <= 50000000) {
+                    arr = mergesort(0, arr.size() - 1);
+                } else stopped = true;
                 break;
             case CYCLE_SORT:
                 std::cout << "Using cycle sort algorithm.\n";
-                cycle_sort();
+                if (arr.size() <= 80000) {
+                    cycle_sort();
+                } else stopped = true;
                 break;
             case SHELLSORT:
                 std::cout << "Using shellsort algorithm.\n";
-                shellsort();
+                if (arr.size() <= 3000000) {
+                    shellsort();
+                } else stopped = true;
                 break;
             case RADIX_SORT_10:
                 std::cout << "Using radix sort with base 10 algorithm.\n";
@@ -107,7 +124,9 @@ public:
                 break;
             case HEAP_SORT:
                 std::cout << "Using heap sort algorithm.\n";
-                heap_sort();
+                if (arr.size() <= 40000000) {
+                    heap_sort();
+                } else stopped = true;
                 break;
             case STL_SORT:
                 std::cout << "Using STL sort algorithm.\n";
@@ -119,9 +138,12 @@ public:
         if(arr.size() <= 100) {
             print_array();
         }
-        std::cout << "Completed in: " << std::fixed << std::setprecision(6)
-                  << 0.000001 * static_cast<double>(duration.count()) << " seconds.\n";
-        std::cout << (std::is_sorted(std::begin(arr), std::end(arr)) ? "Array is sorted correctly." : "Array is not sorted correctly.") << "\n\n";
+        if (!stopped) {
+            std::cout << "Completed in: " << std::fixed << std::setprecision(6)
+                      << 0.000001 * static_cast<double>(duration.count()) << " seconds.\n";
+            std::cout << (std::is_sorted(std::begin(arr), std::end(arr)) ? "Array is sorted correctly."
+                                                                         : "Array is not sorted correctly.") << "\n\n";
+        } else std::cout << "Array is too large.\n\n";
         arr = copy;
     }
 private:
@@ -356,13 +378,13 @@ int main() {
 
 
     Benchmark bm(arr);
-    bm.time(MERGESORT);
-    //bm.time(SELECTION_SORT); // 100k elements ~ 30s => at over 200k elements abort sort (TLE, >60s runtime)
+    bm.time(MERGESORT); // 92424605 elements ~ 128s => stop at 50 million
+    bm.time(SELECTION_SORT); // 100k elements ~ 30s => at over 200k elements abort sort (TLE, >60s runtime)
     bm.time(QS_RANDOM);
-    bm.time(QS_MEDIAN);
+    bm.time(QS_MEDIAN); // Stop all quicksorts at 100 million => 60s exactly
     bm.time(QS_LAST);
     bm.time(QS_FIRST);
-    //bm.time(CYCLE_SORT); // 100k elements ~ 76s => at over 80(-ish)k elements abort sort (TLE, >60s runtime)
+    bm.time(CYCLE_SORT); // 100k elements ~ 76s => at over 80(-ish)k elements abort sort (TLE, >60s runtime)
     bm.time(SHELLSORT);
     bm.time(RADIX_SORT_10); // this one seems to be the slowest among radix sorts
     bm.time(RADIX_SORT_BYTE); // this one (read in Vladut voice) "Trage da rupe scaunu"
