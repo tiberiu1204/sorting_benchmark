@@ -336,7 +336,7 @@ private:
         if(!std::is_unsigned<T>::value)
         {
             for(auto& element : arr){
-                reinterpret_cast<unsigned &>(element) ^= 0x80000000;;
+                reinterpret_cast<unsigned &>(element) ^= 0x80000000;
             }
         }
     }
@@ -378,6 +378,9 @@ int main() {
 
 
     Benchmark bm(arr);
+    bm.time(RADIX_SORT_BYTE); // this one (read in Vladut voice) "Trage da rupe scaunu"
+    bm.time(RADIX_SORT_10); // this one seems to be the slowest among radix sorts
+    bm.time(RADIX_SORT_2_16); // interestingly good, ties with byte one (???) when elements <= 10000, loses afterward
     bm.time(MERGESORT); // 92424605 elements ~ 128s => stop at 50 million
     bm.time(SELECTION_SORT); // 100k elements ~ 30s => at over 200k elements abort sort (TLE, >60s runtime)
     bm.time(QS_RANDOM);
@@ -386,9 +389,6 @@ int main() {
     bm.time(QS_FIRST);
     bm.time(CYCLE_SORT); // 100k elements ~ 76s => at over 80(-ish)k elements abort sort (TLE, >60s runtime)
     bm.time(SHELLSORT);
-    bm.time(RADIX_SORT_10); // this one seems to be the slowest among radix sorts
-    bm.time(RADIX_SORT_BYTE); // this one (read in Vladut voice) "Trage da rupe scaunu"
-    bm.time(RADIX_SORT_2_16); // interestingly good, ties with byte one (???) when elements <= 10000, loses afterward
     bm.time(HEAP_SORT);
     bm.time(STL_SORT);
 
