@@ -255,7 +255,7 @@ private:
         }
     }
 
-    // NOTE: THIS SH*T IS IMPLEMENTATION DEFINED! SO IF THE NERDS THAT WRITE COMPILERS DECIDE THAT FLOATS SHOULD BE 3 BYTES AND INTS 53 BYTES, IT WILL FAIL WITH A SOMMERSAULT!
+    // NOTE: THIS SH*T IS IMPLEMENTATION DEFINED! SO IF THE NERDS THAT WRITE COMPILERS DECIDE THAT FLOATS SHOULD BE 3 BYTES AND INTS 53 BYTES, IT WILL FAIL WITH A SOMERSAULT!
     void radix_sort(unsigned radix = 256) //by default perform byte by byte sorting
     {
         // preprocessing step so the type of the data does not matter: flip all sign bits
@@ -270,7 +270,6 @@ private:
         for (const auto &element : arr){
             max_element = std::max(std::bit_cast<unsigned>(element), max_element);
         }
-        // NOTE: THIS SH*T IS IMPLEMENTATION DEFINED! SO IF THE NERDS THAT WRITE COMPILERS DECIDE THAT FLOATS SHOULD BE 3 BYTES AND INTS 53 BYTES, IT WILL FAIL WITH A SOMERSAULT!
         auto unsigned_max_element = std::bit_cast<unsigned>(max_element);
         std::vector<std::vector<T>> buckets(radix);
 
