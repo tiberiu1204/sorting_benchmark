@@ -11,20 +11,6 @@
 #define MIN_ARRAY_SIZE 10
 #define MAX_ARRAY_ELEMENT_VALUE 1000000000
 
-/*
- * Hey Bludutz, pentru ca stiu ca esti mai prost, am adaugat instructiuni detaliate despre cum sa adaugi algoritmi
- * la benchmark. Nu trebuie sa modifici decat ce iti indic eu, vectorul de sortat este generat automat (daca vrei
- * poti umbla la macro-urile de sus ca sa ii dai tweak). Pentru valori ale array size-ului mai mici sau egale cu 100,
- * vectorul o sa fie afisat in consola inainte de sortare si dupa, pentru debugging. Poti incepe citind instructiunile
- * de la linia 77.
- */
-
-/*
-Hey Pizderiu, pentru ca ti-a fost lene sa scrii cod safe si sa ne faci viata usoara cand Doomitran ne va cere sa testam
-sortarile pe float, am facut eu cateva modificari si am scos warningurile. Vezi ca iti trebuie CXX >= 17, ca altfel trebuie
-sa specifici la compile time tipul template-ului. Noapte buna, revin si cu alte imbunatatiri.
-        P.S. : vezi ca mai sunt 2 warninguri, 2 de recursivitate.
-*/
 
 enum Algorithms
 {
@@ -67,11 +53,6 @@ public:
         std::cout<<"\n";
     }
 
-    /*
-     * Bludutz, dupa ce ai terminat de implementat algoritmul de sortare (vezi mai jos), intoarce-te la aceasta functie
-     * si urmeaza intocmai pasii pe care ti-i voi descrie.
-     * Pasul 1: Du-te la enum Algorithms si adauga un enum nou care sa reprezinte algoritmul tau. Pasul 2 mai jos.
-     */
 
     void time(Algorithms alg) {
         std::cout<<"Sorting array with "<<arr.size()<<" elements.\n";
@@ -149,10 +130,6 @@ private:
     std::random_device dev;
     std::mt19937 rng;
 
-    /*
-     * Bludutz, in aceasta sectiune privata a clasei iti vei scrie tu algoritmii si functiile ajutatoare, daca ai
-     * nevoie. Dupe ce termini de implementat, vezi functia "time" din sectiunea public.
-     */
 
     std::vector<T> merge(std::vector<T> v1, std::vector<T> v2)
     {
@@ -377,7 +354,6 @@ int main() {
         arr.push_back(static_cast<int>(arr_num_dist(rng)));
     }
 
-    // Pasul 3: cheama functia pasand enumul potrivit.
 
     Benchmark bm(arr);
     bm.time(MERGESORT);
