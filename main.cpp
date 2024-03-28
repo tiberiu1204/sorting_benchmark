@@ -6,11 +6,8 @@
 #include <iomanip>
 #include <bit>
 #include <queue>
-
-#define MAX_ARRAY_SIZE 100000001
-#define MIN_ARRAY_SIZE 100000001
-#define MAX_ARRAY_ELEMENT_VALUE 1000000000
-
+#include <fstream>
+#include <cstdint>
 
 enum Algorithms
 {
@@ -40,8 +37,7 @@ template<typename T>
 class Benchmark
 {
 public:
-    explicit Benchmark(const std::vector<T> &arr) : arr(arr), copy(arr), rng(dev())
-    {}
+    explicit Benchmark(const std::vector<T> &arr) : arr(arr), copy(arr), rng(dev()) {}
 
     void print_array() const
     {
@@ -65,25 +61,49 @@ public:
             case QS_RANDOM:
                 std::cout<<"Using quicksort algorithm with random pivot selection.\n";
                 if (arr.size() <= 100000000) {
-                    quicksort(0, arr.size() - 1, RANDOM);
+                    try {
+                        quicksort(0, arr.size() - 1, FIRST, time_start);
+                    }
+                    catch (std::exception &e) {
+                        std::cout<<"Time limit exceeded (>60s)\n";
+                        stopped = true;
+                    }
                 } else stopped = true;
                 break;
             case QS_MEDIAN:
                 std::cout<<"Using quicksort algorithm with median pivot selection.\n";
                 if (arr.size() <= 100000000) {
-                    quicksort(0, arr.size() - 1, MEDIAN);
+                    try {
+                        quicksort(0, arr.size() - 1, FIRST, time_start);
+                    }
+                    catch (std::exception &e) {
+                        std::cout<<"Time limit exceeded (>60s)\n";
+                        stopped = true;
+                    }
                 } else stopped = true;
                 break;
             case QS_LAST:
                 std::cout<<"Using quicksort algorithm with last pivot selection.\n";
                 if (arr.size() <= 100000000) {
-                    quicksort(0, arr.size() - 1, LAST);
+                    try {
+                        quicksort(0, arr.size() - 1, FIRST, time_start);
+                    }
+                    catch (std::exception &e) {
+                        std::cout<<"Time limit exceeded (>60s)\n";
+                        stopped = true;
+                    }
                 } else stopped = true;
                 break;
             case QS_FIRST:
                 std::cout<<"Using quicksort algorithm with first pivot selection.\n";
                 if (arr.size() <= 100000000) {
-                    quicksort(0, arr.size() - 1, FIRST);
+                    try {
+                        quicksort(0, arr.size() - 1, FIRST, time_start);
+                    }
+                    catch (std::exception &e) {
+                        std::cout<<"Time limit exceeded (>60s)\n";
+                        stopped = true;
+                    }
                 } else stopped = true;
                 break;
             case SELECTION_SORT:
@@ -171,7 +191,10 @@ private:
         return res_vec;
     }
 
-    void quicksort(size_t start, size_t end, QuicksortType t) {
+    void quicksort(size_t start, size_t end, QuicksortType t, const auto &time_start) {
+        auto now = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - time_start);
+        if(duration.count() > 60) throw std::exception();
         if(start >= end) return;
         std::uniform_int_distribution<std::mt19937::result_type> dist(start,end);
         size_t pivot;
@@ -199,8 +222,8 @@ private:
             j++;
         }
         std::swap(arr.at(end), arr.at(i));
-        if(i > 0) quicksort(start, i - 1, t);
-        quicksort(i + 1, end, t);
+        if(i > 0) quicksort(start, i - 1, t, time_start);
+        quicksort(i + 1, end, t, time_start);
     }
 
     void selection_sort() {
@@ -360,7 +383,7 @@ private:
 
     void heap_sort()
     {
-        std::priority_queue<T> heap;
+        std::priority_queue <T, std::vector<T>, std::greater<T> > heap;
         for (const auto &element : arr)
         {
             heap.push(element);
@@ -371,7 +394,6 @@ private:
             arr.emplace_back(heap.top());
             heap.pop();
         }
-        std::reverse(arr.begin(), arr.end());
     }
 
     void stl_sort()
@@ -380,34 +402,111 @@ private:
     }
 };
 
+uint32_t read_int(std::ifstream &f) {
+    uint8_t byte0, byte1, byte2, byte3;
+    f>>byte0>>byte1>>byte2>>byte3;
+    return ((static_cast<uint32_t>(byte3) << 24)
+            | (static_cast<uint32_t>(byte2) << 16)
+            | (static_cast<uint32_t>(byte1) << 8)
+            | (static_cast<uint32_t>(byte0)));
+}
+
 int main() {
-    std::random_device dev;
-    auto rng = std::mt19937(dev());
-    std::uniform_int_distribution<std::mt19937::result_type> arr_size_dist(MIN_ARRAY_SIZE, MAX_ARRAY_SIZE);
-    std::uniform_int_distribution<std::mt19937::result_type> arr_num_dist(0, MAX_ARRAY_ELEMENT_VALUE);
-
-    std::vector<int> arr;
-    unsigned int arr_size = arr_size_dist(rng);
-    arr.reserve(arr_size);
-    for(int i = 0; i < arr_size; i++) {
-        arr.push_back(static_cast<int>(arr_num_dist(rng)));
+    std::vector<std::string> files_int = {"sorted_int_", "rev_sorted_int_", "almost_sorted_int_", "random_int_"};
+    std::vector<std::string> files_float = {"sorted_float_", "rev_sorted_float_", "almost_sorted_float_", "random_float_"};
+        for(int i = 1; i <= 9; i++) {
+        for(auto &file : files_int) {
+            std::ifstream f(file + std::to_string(i) + ".txt", std::ios::binary);
+            unsigned size = read_int(f);
+            unsigned max_val = read_int(f);
+            std::vector<int> v;
+            for(int j = 0; j < size; j++) {
+                v.push_back(static_cast<int>(read_int(f)));
+            }
+            Benchmark bm(v);
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(RADIX_SORT_BYTE); // this one (read in Vladut voice) "Trage da rupe scaunu"
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(RADIX_SORT_10); // this one seems to be the slowest among radix sorts
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(RADIX_SORT_2_16); // interestingly good, ties with byte one (???) when elements <= 10000, loses afterward
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(MERGESORT); // 92424605 elements ~ 128s => stop at 50 million
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(SELECTION_SORT); // 100k elements ~ 30s => at over 200k elements abort sort (TLE, >60s runtime)
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(QS_RANDOM);
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(QS_MEDIAN); // Stop all quicksorts at 100 million => 60s exactly (much more on my machine :) )
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(QS_LAST);
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(QS_FIRST);
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(CYCLE_SORT); // 100k elements ~ 76s => at over 80(-ish)k elements abort sort (TLE, >60s runtime)
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(SHELLSORT);
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(HEAP_SORT);
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(STL_SORT);
+        }
     }
-
-
-    Benchmark bm(arr);
-    bm.time(RADIX_SORT_BYTE); // this one (read in Vladut voice) "Trage da rupe scaunu"
-    bm.time(RADIX_SORT_10); // this one seems to be the slowest among radix sorts
-    bm.time(RADIX_SORT_2_16); // interestingly good, ties with byte one (???) when elements <= 10000, loses afterward
-    bm.time(MERGESORT); // 92424605 elements ~ 128s => stop at 50 million
-    bm.time(SELECTION_SORT); // 100k elements ~ 30s => at over 200k elements abort sort (TLE, >60s runtime)
-    bm.time(QS_RANDOM);
-    bm.time(QS_MEDIAN); // Stop all quicksorts at 100 million => 60s exactly
-    bm.time(QS_LAST);
-    bm.time(QS_FIRST);
-    bm.time(CYCLE_SORT); // 100k elements ~ 76s => at over 80(-ish)k elements abort sort (TLE, >60s runtime)
-    bm.time(SHELLSORT);
-    bm.time(HEAP_SORT);
-    bm.time(STL_SORT);
-
-    return 0;
+    for(int i = 1; i <= 6; i++) {
+        for(auto &file : files_float) {
+            std::ifstream f(file + std::to_string(i) + ".txt", std::ios::binary);
+            unsigned size = read_int(f);
+            unsigned max_val = read_int(f);
+            std::vector<float> v;
+            for(int j = 0; j < size; j++) {
+                v.push_back(std::bit_cast<float>((read_int(f))));
+            }
+            Benchmark bm(v);
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(RADIX_SORT_BYTE); // this one (read in Vladut voice) "Trage da rupe scaunu"
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(RADIX_SORT_10); // this one seems to be the slowest among radix sorts
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(RADIX_SORT_2_16); // interestingly good, ties with byte one (???) when elements <= 10000, loses afterward
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(MERGESORT); // 92424605 elements ~ 128s => stop at 50 million
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(SELECTION_SORT); // 100k elements ~ 30s => at over 200k elements abort sort (TLE, >60s runtime)
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(QS_RANDOM);
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(QS_MEDIAN); // Stop all quicksorts at 100 million => 60s exactly (much more on my machine :) )
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(QS_LAST);
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(QS_FIRST);
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(CYCLE_SORT); // 100k elements ~ 76s => at over 80(-ish)k elements abort sort (TLE, >60s runtime)
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(SHELLSORT);
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(HEAP_SORT);
+            std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            bm.time(STL_SORT);
+        }
+    }
+//    std::random_device dev;
+//    auto rng = std::mt19937(dev());
+//    std::uniform_int_distribution<std::mt19937::result_type> arr_size_dist(10, 100);
+//    std::uniform_int_distribution<std::mt19937::result_type> arr_num_dist(0, 0xffffffff);
+//
+//    std::vector<float> arr;
+//    unsigned int arr_size = arr_size_dist(rng);
+//    arr.reserve(arr_size);
+//    for(int i = 0; i < arr_size; i++) {
+//        arr.push_back(std::bit_cast<float>((arr_num_dist(rng))));
+//    }
+//
+//
+//    Benchmark bm(arr);
+//    bm.time(RADIX_SORT_BYTE); // this one (read in Vladut voice) "Trage da rupe scaunu"
+//    bm.time(RADIX_SORT_10); // this one seems to be the slowest among radix sorts
+//    bm.time(RADIX_SORT_2_16); // interestingly good, ties with byte one (???) when elements <= 10000, loses afterward
+//
+//    return 0;
 }
