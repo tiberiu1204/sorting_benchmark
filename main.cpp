@@ -273,15 +273,23 @@ private:
         // also get the max element as unsigned for later
         if(!std::is_unsigned<T>::value)
         {
-            for(auto& element : arr){
-                reinterpret_cast<unsigned &>(element) ^= 0x80000000;
+            if (std::is_floating_point<T>::value) {
+                for (auto &element: arr) {
+                    if (reinterpret_cast<unsigned &>(element) & 0x80000000)
+                        reinterpret_cast<unsigned &>(element) ^= 0xFFFFFFFF;
+                    else
+                        reinterpret_cast<unsigned long long &>(element) ^= 0x80000000;
+                }
+            } else {
+                for (auto &element: arr) {
+                    reinterpret_cast<unsigned long long &>(element) ^= 0x80000000;
+                }
             }
         }
         unsigned max_element = 0;
         for (const auto &element : arr){
             max_element = std::max(std::bit_cast<unsigned>(element), max_element);
         }
-        auto unsigned_max_element = std::bit_cast<unsigned>(max_element);
         std::vector<std::vector<T>> buckets(radix);
 
         if(radix == 256)
@@ -316,7 +324,7 @@ private:
             }
         } else
         {
-            for (unsigned long long order = 1; unsigned_max_element / order > 0; order *= radix)
+            for (unsigned long long order = 1; max_element / order > 0; order *= radix)
             {
                 for (const auto &element : arr)
                 {
@@ -335,8 +343,17 @@ private:
         // repair array
         if(!std::is_unsigned<T>::value)
         {
-            for(auto& element : arr){
-                reinterpret_cast<unsigned &>(element) ^= 0x80000000;
+            if (std::is_floating_point<T>::value) {
+                for (auto &element: arr) {
+                    if (!(reinterpret_cast<unsigned &>(element) & 0x80000000))
+                        reinterpret_cast<unsigned &>(element) ^= 0xFFFFFFFF;
+                    else
+                        reinterpret_cast<unsigned long long &>(element) ^= 0x80000000;
+                }
+            } else {
+                for (auto &element: arr) {
+                    reinterpret_cast<unsigned long long &>(element) ^= 0x80000000;
+                }
             }
         }
     }
