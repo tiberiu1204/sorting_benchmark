@@ -383,7 +383,7 @@ private:
 
     void heap_sort()
     {
-        std::priority_queue <T, std::vector<T>, std::greater<T> > heap;
+        std::priority_queue <T, std::vector<T>, std::greater<> > heap;
         for (const auto &element : arr)
         {
             heap.push(element);
@@ -411,10 +411,97 @@ uint32_t read_int(std::ifstream &f) {
             | (static_cast<uint32_t>(byte0)));
 }
 
+template<typename T>
+std::vector<T> GRV(size_t size, uint32_t max_element) {
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_int_distribution<std::mt19937::result_type> dist(0, max_element);
+
+    std::vector<T> result;
+    for(size_t i = 0; i < size; i++) {
+        uint32_t num = dist(rng);
+        if(max_element == 0x7f800000 && num > 0x7f800000 / 2) {
+            num = std::bit_cast<uint32_t>(num) ^ 0x80000000;
+        }
+        result.push_back(std::bit_cast<T>(num));
+        if(std::isnan(num)) throw std::exception();
+    }
+
+    return result;
+}
+
+template<typename T>
+void write_test(const std::string &file_name, const std::vector<T> &v) {
+    T max_val = v[0];
+    for(const auto &el : v) {
+        if(max_val < el) max_val = el;
+    }
+    std::ofstream f(file_name, std::ios::binary | std::ios::out);
+    size_t size = v.size();
+    f.write((char*) &size, sizeof(v.size()));
+    f.write((char*) &max_val, sizeof(max_val));
+    for(const auto &el : v) {
+        f.write((char*) &el, sizeof(el));
+    }
+    std::cout<<"Generating test: "<<file_name<<"\n";
+}
+
 int main() {
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::vector<uint32_t> sizes = {1000, 1000000, 100000000};
+    std::vector<uint32_t> maxes = {1000, 1000000, 0x7f800000};
+    size_t t = 0;
+    for(int i = 0; i < sizes.size(); i++) {
+        for(int j = 0; j < maxes.size(); j++) {
+            uint32_t max_val = maxes[j];
+            uint32_t size = sizes[i];
+            std::vector<int> v1 = GRV<int>(size, max_val);
+            std::vector<float> v2 = GRV<float>(size, max_val);
+
+            // Deja sortat cresc
+            std::sort(v1.begin(), v1.end());
+            write_test<int>("sorted_int_" + std::to_string(i * 3 + j) + ".txt", v1);
+            std::sort(v2.begin(), v2.end());
+            write_test<float>("sorted_float_" + std::to_string(i * 3 + j) + ".txt", v2);
+            // Deja sortat descresc
+            v1 = GRV<int>(size, max_val);
+            v2 = GRV<float>(size, max_val);
+            std::sort(v1.begin(), v1.end());
+            std::reverse(v1.begin(), v1.end());
+            write_test<int>("rev_sorted_int_" + std::to_string(i * 3 + j) + ".txt", v1);
+            std::sort(v2.begin(), v2.end());
+            std::reverse(v2.begin(), v2.end());
+            write_test<float>("rev_sorted_float_" + std::to_string(i * 3 + j) + ".txt", v2);
+            // Almost sorted
+            v1 = GRV<int>(size, max_val);
+            v2 = GRV<float>(size, max_val);
+            std::sort(v1.begin(), v1.end());
+            uint32_t inversions = v1.size() / 20;
+            for(int k = 0; k < inversions; k++) {
+                std::uniform_int_distribution<std::mt19937::result_type> dist(0, size - 1);
+                size_t x = dist(rng), y = dist(rng);
+                std::swap(v1[x], v1[y]);
+            }
+            write_test<int>("almost_sorted_int_" + std::to_string(i * 3 + j) + ".txt", v1);
+            std::sort(v2.begin(), v2.end());
+            inversions = v2.size() / 20;
+            for(int k = 0; k < inversions; k++) {
+                std::uniform_int_distribution<std::mt19937::result_type> dist(0, size - 1);
+                size_t x = dist(rng), y = dist(rng);
+                std::swap(v2[x], v2[y]);
+            }
+            write_test<float>("almost_sorted_float_" + std::to_string(i * 3 + j) + ".txt", v2);
+            //Random Random
+            v1 = GRV<int>(size, max_val);
+            v2 = GRV<float>(size, max_val);
+            write_test<int>("random_int_" + std::to_string(i * 3 + j) + ".txt", v1);
+            write_test<float>("random_float_" + std::to_string(i * 3 + j) + ".txt", v2);
+        }
+    }
     std::vector<std::string> files_int = {"sorted_int_", "rev_sorted_int_", "almost_sorted_int_", "random_int_"};
     std::vector<std::string> files_float = {"sorted_float_", "rev_sorted_float_", "almost_sorted_float_", "random_float_"};
-        for(int i = 1; i <= 9; i++) {
+        for(int i = 0; i < 9; i++) {
         for(auto &file : files_int) {
             std::ifstream f(file + std::to_string(i) + ".txt", std::ios::binary);
             unsigned size = read_int(f);
@@ -425,66 +512,91 @@ int main() {
             }
             Benchmark bm(v);
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(RADIX_SORT_BYTE); // this one (read in Vladut voice) "Trage da rupe scaunu"
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(RADIX_SORT_10); // this one seems to be the slowest among radix sorts
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(RADIX_SORT_2_16); // interestingly good, ties with byte one (???) when elements <= 10000, loses afterward
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(MERGESORT); // 92424605 elements ~ 128s => stop at 50 million
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(SELECTION_SORT); // 100k elements ~ 30s => at over 200k elements abort sort (TLE, >60s runtime)
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(QS_RANDOM);
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(QS_MEDIAN); // Stop all quicksorts at 100 million => 60s exactly (much more on my machine :) )
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(QS_LAST);
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(QS_FIRST);
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(CYCLE_SORT); // 100k elements ~ 76s => at over 80(-ish)k elements abort sort (TLE, >60s runtime)
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(SHELLSORT);
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(HEAP_SORT);
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(STL_SORT);
         }
     }
-    for(int i = 1; i <= 6; i++) {
+    for(int i = 0; i < 9; i++) {
         for(auto &file : files_float) {
             std::ifstream f(file + std::to_string(i) + ".txt", std::ios::binary);
             unsigned size = read_int(f);
-            unsigned max_val = read_int(f);
+            auto max_val = std::bit_cast<float>(read_int(f));
             std::vector<float> v;
             for(int j = 0; j < size; j++) {
                 v.push_back(std::bit_cast<float>((read_int(f))));
             }
             Benchmark bm(v);
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(RADIX_SORT_BYTE); // this one (read in Vladut voice) "Trage da rupe scaunu"
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(RADIX_SORT_10); // this one seems to be the slowest among radix sorts
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(RADIX_SORT_2_16); // interestingly good, ties with byte one (???) when elements <= 10000, loses afterward
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(MERGESORT); // 92424605 elements ~ 128s => stop at 50 million
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(SELECTION_SORT); // 100k elements ~ 30s => at over 200k elements abort sort (TLE, >60s runtime)
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(QS_RANDOM);
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(QS_MEDIAN); // Stop all quicksorts at 100 million => 60s exactly (much more on my machine :) )
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(QS_LAST);
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(QS_FIRST);
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(CYCLE_SORT); // 100k elements ~ 76s => at over 80(-ish)k elements abort sort (TLE, >60s runtime)
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(SHELLSORT);
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(HEAP_SORT);
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
             bm.time(STL_SORT);
