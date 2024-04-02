@@ -301,11 +301,11 @@ private:
                     if (reinterpret_cast<unsigned &>(element) & 0x80000000)
                         reinterpret_cast<unsigned &>(element) ^= 0xFFFFFFFF;
                     else
-                        reinterpret_cast<unsigned long long &>(element) ^= 0x80000000;
+                        reinterpret_cast<unsigned &>(element) ^= 0x80000000;
                 }
             } else {
                 for (auto &element: arr) {
-                    reinterpret_cast<unsigned long long &>(element) ^= 0x80000000;
+                    reinterpret_cast<unsigned &>(element) ^= 0x80000000;
                 }
             }
         }
@@ -313,25 +313,29 @@ private:
         for (const auto &element : arr){
             max_element = std::max(std::bit_cast<unsigned>(element), max_element);
         }
-        std::vector<std::vector<T>> buckets(radix);
+
 
         if(radix == 256)
         {
             for (unsigned byte_index = 0; byte_index < 4; ++byte_index)
             {
-                for (const auto &element : arr)
+                std::vector<size_t> count(256, 0);
+                for (auto &element : arr)
                 {
-                    buckets[(std::bit_cast<unsigned>(element)>>(byte_index*8))&0xff].emplace_back(element);
+                    count[(std::bit_cast<unsigned>(element)>>(byte_index*8))&0xff]++;
+                    reinterpret_cast<unsigned &>(element) &= ~(0x000000ff << (byte_index * 8));
                 }
-                arr.clear();
-                auto dest = std::back_inserter(arr);
-                for (auto &bucket : buckets) {
-                    arr.insert(std::end(arr), std::begin(bucket), std::end(bucket));
-                    bucket.clear();
+                size_t current_count = 0;
+                for (auto &element : arr)
+                {
+                    while (count.at(current_count) == 0)
+                        current_count++;
+                    reinterpret_cast<unsigned &>(element) ^= current_count << (byte_index * 8);
                 }
             }
         } else if (radix == 0x00010000)
         {
+            std::vector<std::vector<T>> buckets(radix);
             for (unsigned byte_pair_index = 0; byte_pair_index < 2; ++byte_pair_index)
             {
                 for (const auto &element : arr)
@@ -347,6 +351,7 @@ private:
             }
         } else
         {
+            std::vector<std::vector<T>> buckets(radix);
             for (unsigned long long order = 1; max_element / order > 0; order *= radix)
             {
                 for (const auto &element : arr)
@@ -371,11 +376,11 @@ private:
                     if (!(reinterpret_cast<unsigned &>(element) & 0x80000000))
                         reinterpret_cast<unsigned &>(element) ^= 0xFFFFFFFF;
                     else
-                        reinterpret_cast<unsigned long long &>(element) ^= 0x80000000;
+                        reinterpret_cast<unsigned &>(element) ^= 0x80000000;
                 }
             } else {
                 for (auto &element: arr) {
-                    reinterpret_cast<unsigned long long &>(element) ^= 0x80000000;
+                    reinterpret_cast<unsigned &>(element) ^= 0x80000000;
                 }
             }
         }
@@ -451,7 +456,7 @@ int main() {
     std::mt19937 rng(dev());
     std::vector<uint32_t> sizes = {1000, 1000000, 100000000};
     std::vector<uint32_t> maxes = {1000, 1000000, 0x7f800000};
-    size_t t = 0;
+    /*size_t t = 0;
     for(int i = 0; i < sizes.size(); i++) {
         for(int j = 0; j < maxes.size(); j++) {
             uint32_t max_val = maxes[j];
@@ -498,7 +503,7 @@ int main() {
             write_test<int>("random_int_" + std::to_string(i * 3 + j) + ".txt", v1);
             write_test<float>("random_float_" + std::to_string(i * 3 + j) + ".txt", v2);
         }
-    }
+    }*/
     std::vector<std::string> files_int = {"sorted_int_", "rev_sorted_int_", "almost_sorted_int_", "random_int_"};
     std::vector<std::string> files_float = {"sorted_float_", "rev_sorted_float_", "almost_sorted_float_", "random_float_"};
         for(int i = 0; i < 9; i++) {
@@ -599,6 +604,7 @@ int main() {
             std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(HEAP_SORT);
             std::cout<<"Test: " + file + std::to_string(i) + ".txt\n";
+            std::cout<<"Max val: "<<std::setprecision(12)<<max_val<<"\n";
             bm.time(STL_SORT);
         }
     }
